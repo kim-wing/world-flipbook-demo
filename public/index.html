@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Flipbook Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="browser-stage" aria-label="世界视觉浏览器">
+        <div class="browser-window">
+          <header class="toolbar">
+            <div class="window-controls" aria-hidden="true">
+              <button id="clearButton" class="control close" title="清空历史"></button>
+              <span class="control"></span>
+              <span class="control"></span>
+            </div>
+            <form id="searchForm" class="address">
+              <div id="crumbs" class="crumbs"></div>
+              <input id="queryInput" autocomplete="off" placeholder="输入世界任意地点或主题，或直接点击画面探索" />
+              <button class="submit" aria-label="生成">↗</button>
+            </form>
+          </header>
+          <figure id="frame" class="frame">
+            <img id="mainImage" class="main-image" alt="世界视觉探索页" draggable="false" />
+            <div id="tapMarker" class="tap-marker" hidden></div>
+            <div id="ripple" class="ripple" hidden></div>
+            <div id="draftCard" class="draft-card" hidden>
+              <div class="draft-orbit" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="draft-copy">
+                <p id="draftPhase" class="draft-phase">定位画面</p>
+                <p id="draftText" class="draft-text">正在理解你点击的世界细节</p>
+                <div class="draft-progress" aria-hidden="true">
+                  <span></span>
+                </div>
+              </div>
+              <div class="draft-steps" aria-hidden="true">
+                <span class="active">定位</span>
+                <span>构图</span>
+                <span>成像</span>
+                <span>润色</span>
+              </div>
+            </div>
+            <div id="status" class="status"></div>
+          </figure>
+        </div>
+        <p class="caption">点击图中的任何区域，生成下一张世界视觉页</p>
+      </section>
+
+      <section class="notes">
+        <h1>全球无限视觉地图 Demo</h1>
+        <p>每一页都是图片；点击坐标会连同当前上下文发给生成接口，返回草稿、预览和最终页。设置 <code>OPENAI_API_KEY</code> 后会调用 OpenAI 图片模型。</p>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
