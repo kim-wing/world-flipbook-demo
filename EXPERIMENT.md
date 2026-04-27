@@ -1,41 +1,85 @@
-# 实验说明：World Flipbook Demo
+# World Flipbook Demo
 
-## 实验目标
+World Flipbook Demo is an experimental visual browser for exploring the world through generated images.
 
-验证一种“图片即页面”的无限视觉地图交互：用户从一张世界总览图开始，点击图中任意区域或输入主题，系统根据当前页面、点击坐标和历史上下文生成下一张视觉页，从而形成可持续深入的图像浏览链路。
+Instead of using a traditional tiled map, every screen is a generated 16:9 image. You start from a world overview, click any region that looks interesting, and the app generates the next visual page from that context. The result feels closer to browsing an illustrated atlas than zooming a normal map.
 
-## 核心假设
+## What You Can Try
 
-传统地图依赖瓦片、矢量图层和固定缩放级别；本实验尝试用生成式图片替代固定瓦片。每次点击都被解释为一次语义探索请求，而不是几何缩放请求。
+- Start from a global visual guide map.
+- Click any area in the image to continue exploring.
+- Type a place or theme, such as `Silk Road`, `Iceland`, `Amazon rainforest`, or `Tokyo architecture`.
+- Move through generated pages with the breadcrumb history.
+- Keep the current image visible while the next one is loading.
 
-## 实现方式
+## How It Works
 
-- 前端显示单张 16:9 图片，并记录页面历史面包屑。
-- 点击图片时，前端将归一化坐标、当前标题、父级 query、session id 发给后端。
-- 后端根据坐标和上下文选择一个世界主题分支，生成提示词。
-- 图片生成通过 OpenAI-compatible API 调用，默认模型为 `gpt-image-2`。
-- 生成过程使用 SSE 返回阶段事件：`tap_subject`、`preview`、`draft_complete`、`complete`。
-- loading 期间保持当前图片不变，只覆盖 loading 动效；最终图完成后再切换。
-- 首页图和每次生成结果保存到 `data/generated-images.json`，避免重复生成首页。
+The browser sends the current page context and clicked coordinates to a small Node.js server. The server turns that interaction into a prompt and calls an OpenAI-compatible image generation API.
 
-## 安全与成本控制
+The app uses Server-Sent Events to stream generation stages back to the browser, so the UI can show progress without replacing the current image too early. Only the final generated image becomes the next page.
 
-- API key 只通过环境变量传入，不写入源码。
-- `.env` 和 `data/generated-images.json` 已加入 `.gitignore`。
-- 仓库只提供 `.env.example` 和 `data/generated-images.example.json`。
-- 首页优先读取本地默认图缓存；没有缓存时才生成。
-- 不设置 `OPENAI_API_KEY` 时使用本地 SVG fallback，便于离线演示。
+The default model is:
 
-## 局限
+```text
+gpt-image-2
+```
 
-- 生成图中的文字和地理位置可能不完全准确。
-- 点击坐标目前只做轻量语义路由，并没有真正识别图片内容。
-- 本地 JSON 存储适合 demo，不适合多用户生产环境。
-- 远程图片 URL 的有效期取决于第三方接口。
+The API key is read from environment variables and is never stored in the repository.
 
-## 后续方向
+## Local Setup
 
-- 增加图像理解模型，对点击区域做真实视觉识别。
-- 将 JSON 存储替换为数据库，并记录完整节点树。
-- 增加“重新生成首页”“设为默认图”“导出路线”等管理能力。
-- 为不同主题配置专属提示词模板，例如城市、自然、历史、建筑、美食。
+```bash
+npm start
+```
+
+To use image generation, provide your own API settings:
+
+```bash
+OPENAI_API_KEY="your-key" \
+OPENAI_BASE_URL="https://api.tu-zi.com/v1" \
+OPENAI_IMAGE_MODEL="gpt-image-2" \
+OPENAI_REQUEST_TIMEOUT_MS="90000" \
+npm start
+```
+
+Without `OPENAI_API_KEY`, the app still runs with local SVG fallback images.
+
+## Generated Image Cache
+
+Generated images are saved locally in:
+
+```text
+data/generated-images.json
+```
+
+That file is ignored by Git because it may contain generated image URLs and local experiment history. The repository includes only this empty example:
+
+```text
+data/generated-images.example.json
+```
+
+The first generated world overview can be reused as the default home image, so opening the app again does not need to regenerate the homepage.
+
+## Why This Exists
+
+This demo explores a different direction for maps and travel discovery:
+
+- A map can be semantic, not only geometric.
+- A click can mean “tell me more about this idea,” not just “zoom in.”
+- Generated images can act as navigable pages.
+- A visual browsing session can become an expanding tree of places, cultures, landscapes, and stories.
+
+## Current Limitations
+
+- Generated labels and geography may be inaccurate.
+- Click handling is still approximate; it does not yet use true image understanding.
+- The local JSON store is for demos, not production multi-user storage.
+- Remote generated image URLs may expire depending on the API provider.
+
+## Possible Next Steps
+
+- Add vision-based click understanding.
+- Store the full exploration tree in a database.
+- Add controls for regenerating, pinning, and setting default images.
+- Add export/share links for generated routes.
+- Create specialized prompt templates for cities, nature, history, architecture, food, and culture.
