@@ -1,30 +1,61 @@
 # World Flipbook Demo
 
-本地全球视觉浏览 demo。首页会优先读取 `data/generated-images.json` 里的默认「世界全域视觉导览图」；没有默认图时才自动生成。之后点击画面任意区域，会通过 `/api/iteratively-generate-next-page` 发起生成流程，并用 SSE 返回 `tap_subject`、`preview`、`draft_complete`、`complete` 事件。
+World Flipbook Demo is a visual browsing prototype where every page is a generated image.
 
-## Start
+Instead of a fixed tile map, the app starts with a world overview and lets you explore by clicking inside the image or typing a theme. Each interaction becomes a new visual page, so the experience feels closer to browsing an illustrated atlas than using a conventional map.
+
+## Highlights
+
+- A single 16:9 image is the page.
+- Click any region to continue exploring.
+- Type a place or theme to redirect the journey.
+- The current image stays visible while the next one loads.
+- Generated pages are saved locally so the homepage does not need to regenerate every time.
+
+## Run Locally
 
 ```bash
-OPENAI_API_KEY="..." \
+npm start
+```
+
+To enable image generation, provide your own API settings:
+
+```bash
+OPENAI_API_KEY="your-key" \
 OPENAI_BASE_URL="https://api.tu-zi.com/v1" \
 OPENAI_IMAGE_MODEL="gpt-image-2" \
 OPENAI_REQUEST_TIMEOUT_MS="90000" \
 npm start
 ```
 
-可选：
+Optional settings:
 
 ```bash
 OPENAI_IMAGE_SIZE="1024x1024"
 OPENAI_IMAGE_QUALITY="auto"
 ```
 
-不设置 `OPENAI_API_KEY` 时会自动使用本地 SVG fallback，方便离线演示。
+Without `OPENAI_API_KEY`, the app still runs using local SVG fallback images.
 
-生成完成的图片都会追加保存到 `data/generated-images.json`，首页生成结果会自动设为新的 `default_home_id`。旧杭州图片会继续留在历史里，但不会作为全球首页默认图使用。
+## How It Works
 
-## Notes
+The browser sends the current page context and click position to a small Node.js server. The server turns that interaction into a prompt and calls an OpenAI-compatible image API. Progress is streamed back with Server-Sent Events, and only the final image replaces the current page.
 
-- 不要把真实 API key 写进代码或提交到仓库；使用 `.env.example` 作为配置模板。
-- `data/generated-images.json` 是本地生成缓存，已被 `.gitignore` 排除；仓库只保留 `data/generated-images.example.json`。
-- 实验原理与限制见 [EXPERIMENT.md](./EXPERIMENT.md)。
+The default model is `gpt-image-2`.
+
+## Generated Cache
+
+Generated pages are stored locally in `data/generated-images.json`. That file is ignored by Git because it may contain local experiment history and generated image URLs. The repository includes `data/generated-images.example.json` as an empty template.
+
+The homepage uses the saved default image first. If no default image exists, the app generates one and saves it for future visits.
+
+## Safety
+
+- API keys stay in environment variables.
+- `.env` is ignored by Git.
+- `data/generated-images.json` is ignored by Git.
+- The repository includes `.env.example` so other people can configure their own credentials safely.
+
+## More Detail
+
+See [EXPERIMENT.md](./EXPERIMENT.md) for the public experiment notes and design rationale.
